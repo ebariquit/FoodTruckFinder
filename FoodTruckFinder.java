@@ -11,6 +11,7 @@ import java.util.LinkedList;
 import java.util.Scanner;
 
 // The JAR containing the following can be found here: http://www.java2s.com/Code/Jar/j/Downloadjsonsimple11jar.htm
+// Please be sure the JAR is included in your classpath.
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -20,11 +21,11 @@ public class FoodTruckFinder {
     public static void main(String[] args) {
         int offset = 0;
         Scanner scanner = new Scanner(System.in);
+        System.out.println("*** Showing food trucks currently open in San Francisco, CA ***\n");
 
         // Each loop makes an API call. Each call is paginated
         // and picks up where the previous call left off.
         while (true) {
-
             String[] currentDayAndTime = currentDayAndTime();               // Fetch needed params for API call.
             String query = buildQueryString(currentDayAndTime, offset);     // Create and encode the query string.
             String jsonResponse = makeRequest(query);                       // Make the call.
@@ -35,11 +36,13 @@ public class FoodTruckFinder {
                 break;
 
             // Print the results for this page.
-            for (FoodTruck truck : foodTrucks)
-                truck.print();
+            for (FoodTruck truck : foodTrucks) {
+                System.out.println(" - " + truck);
+            }
 
             // For pagination.
             offset += 10;
+
             System.out.println("\n*** Enter any value to see more results. ***");
             scanner.next();
         }
@@ -49,13 +52,13 @@ public class FoodTruckFinder {
 
     }
 
-    // Returns array containing day as integer and current time as string in HH:MM format.
+    // Returns array containing day and current time as string in HH:MM format.
     private static String[] currentDayAndTime() {
         String[] data = new String[2];
 
         // Utilize java calendar class.
         Calendar cal = Calendar.getInstance();
-        int dayOrder = cal.get(Calendar.DAY_OF_WEEK) - 1;
+        int dayOrder = cal.get(Calendar.DAY_OF_WEEK) - 1;           // API: Sunday=0    |    java.Calendar: Sunday=1
         int hour = cal.get(Calendar.HOUR_OF_DAY);
         int minute = cal.get(Calendar.MINUTE);
 
@@ -73,8 +76,8 @@ public class FoodTruckFinder {
 
     // Put the query string together and encode it so it can be passed to the URI.
     private static String buildQueryString(String[] timeData, int offset) {
-        String query = "SELECT applicant,location" + //,start24,end24" +
-                " WHERE dayorder = '" + timeData[0] + "'" +
+        String query = "SELECT applicant,location" +
+                " WHERE dayOrder = '" + timeData[0] + "'" +
                 " AND start24 <= '" + timeData[1] + "'" +
                 " AND end24 >= '" + timeData[1] + "'" +
                 " ORDER BY applicant ASC" +
@@ -84,7 +87,8 @@ public class FoodTruckFinder {
         // Handle unsupported encodings.
         try {
             query = URLEncoder.encode(query, StandardCharsets.UTF_8.name());
-        } catch (UnsupportedEncodingException ex) {
+        }
+        catch (UnsupportedEncodingException ex) {
             System.out.println(ex.getMessage());
         }
 
@@ -114,7 +118,8 @@ public class FoodTruckFinder {
 
             rd.close();
 
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             System.out.println(e.getMessage());
         }
 
@@ -138,7 +143,8 @@ public class FoodTruckFinder {
                 foodTrucks.add(truck);
             }
 
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             System.out.println(e.getMessage());
         }
 
