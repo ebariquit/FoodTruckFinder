@@ -1,20 +1,10 @@
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+
 import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.Scanner;
-
-// The JAR containing the following can be found here: http://www.java2s.com/Code/Jar/j/Downloadjsonsimple11jar.htm
-// Please be sure the JAR is included in your classpath.
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 
 public class FoodTruckFinder {
 
@@ -28,8 +18,8 @@ public class FoodTruckFinder {
         while (true) {
             String[] currentDayAndTime = currentDayAndTime();               // Fetch needed params for API call.
             String query = buildQueryString(currentDayAndTime, offset);     // Create and encode the query string.
-            String jsonResponse = makeRequest(query);                       // Make the call.
-            LinkedList<FoodTruck> foodTrucks = parseJSON(jsonResponse);     // Parse the response into FoodTruck objects.
+            FoodTruckDAO dao = new FoodTruckDAO();                          // Send query to the DAO
+            LinkedList<FoodTruck> foodTrucks = dao.fetchNext10(query);
 
             // Break loop if there are no results on this page.
             if (foodTrucks.size() == 0)
@@ -49,6 +39,7 @@ public class FoodTruckFinder {
 
         System.out.println("End of results.");
         scanner.close();
+
 
     }
 
@@ -93,62 +84,6 @@ public class FoodTruckFinder {
         }
 
         return "?$query=" + query;
-    }
-
-    // Make the API call using the query string we created.
-    private static String makeRequest(String query) {
-        StringBuilder result = new StringBuilder();
-
-        // Handle any HTTP errors that may arise.
-        try {
-            // Open connection.
-            URL url = new URL("http://data.sfgov.org/resource/bbb8-hzi6.json" + query);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-
-            // Read the response.
-            InputStream inStream = conn.getInputStream();
-            InputStreamReader inStreamReader = new InputStreamReader(inStream);
-            BufferedReader rd = new BufferedReader(inStreamReader);
-
-            String line;
-            while ((line = rd.readLine()) != null) {
-                result.append(line);
-            }
-
-            rd.close();
-
-        }
-        catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
-
-        return result.toString();
-    }
-
-    // Parse the json response into FoodTruck objects.
-    private static LinkedList<FoodTruck> parseJSON(String response) {
-        LinkedList<FoodTruck> foodTrucks = new LinkedList<>();
-
-        // Handle any JSON parsing errors that may arise.
-        try {
-            // Parse the response string.
-            JSONParser parser = new JSONParser();
-            JSONArray data = (JSONArray) parser.parse(response);
-
-            // Create the foodtruck objects from our extracted JSON data.
-            for (Object object : data) {
-                JSONObject obj = (JSONObject) object;
-                FoodTruck truck = new FoodTruck(obj);
-                foodTrucks.add(truck);
-            }
-
-        }
-        catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
-
-        return foodTrucks;
     }
 
 }
